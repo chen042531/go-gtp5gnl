@@ -1,6 +1,7 @@
 package gtp5gnl
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -40,6 +41,8 @@ func DecodePDR(b []byte) (*PDR, error) {
 		}
 		switch hdr.MaskedType() {
 		case PDR_ID:
+			fmt.Printf("length:%v  \n", len(b[n:]))
+			fmt.Printf("version:%s \n", b[n:])
 			pdr.ID = native.Uint16(b[n:])
 		case PDR_PRECEDENCE:
 			v := native.Uint32(b[n:])

@@ -167,7 +167,7 @@ func GetPDR(c *Client, link *Link, pdrid int) (*PDR, error) {
 func GetPDROID(c *Client, link *Link, oid OID) (*PDR, error) {
 	flags := syscall.NLM_F_ACK
 	req := nl.NewRequest(c.ID, flags)
-	err := req.Append(genl.Header{Cmd: CMD_GET_PDR})
+	err := req.Append(genl.Header{Cmd: 16})
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +175,7 @@ func GetPDROID(c *Client, link *Link, oid OID) (*PDR, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid oid: %v", oid)
 	}
+	fmt.Printf("1\n")
 	err = req.Append(&nl.AttrList{
 		{
 			Type:  LINK,
