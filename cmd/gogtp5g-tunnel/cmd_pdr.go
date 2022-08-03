@@ -400,11 +400,12 @@ func CmdGetPDR(args []string) error {
 		return err
 	}
 
+	fmt.Printf("interface: %v\n", ifname)
 	link, err := gtp5gnl.GetLink(ifname)
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("after interface: %v\n", ifname)
 	pdr, err := gtp5gnl.GetPDROID(c, link, oid)
 	if err != nil {
 		return err
