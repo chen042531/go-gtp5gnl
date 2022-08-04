@@ -171,34 +171,34 @@ func GetPDROID(c *Client, link *Link, oid OID) (*PDR, error) {
 	if err != nil {
 		return nil, err
 	}
-	pdrid, ok := oid.ID()
-	if !ok {
-		return nil, fmt.Errorf("invalid oid: %v", oid)
-	}
-	fmt.Printf("1\n")
-	err = req.Append(&nl.AttrList{
-		{
-			Type:  LINK,
-			Value: nl.AttrU32(link.Index),
-		},
-		{
-			Type:  PDR_ID,
-			Value: nl.AttrU16(pdrid),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	seid, ok := oid.SEID()
-	if ok {
-		err = req.Append(&nl.Attr{
-			Type:  PDR_SEID,
-			Value: nl.AttrU64(seid),
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
+	// pdrid, ok := oid.ID()
+	// if !ok {
+	// 	return nil, fmt.Errorf("invalid oid: %v", oid)
+	// }
+	// fmt.Printf("1\n")
+	// err = req.Append(&nl.AttrList{
+	// 	{
+	// 		Type:  LINK,
+	// 		Value: nl.AttrU32(link.Index),
+	// 	},
+	// 	{
+	// 		Type:  PDR_ID,
+	// 		Value: nl.AttrU16(pdrid),
+	// 	},
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// seid, ok := oid.SEID()
+	// if ok {
+	// 	err = req.Append(&nl.Attr{
+	// 		Type:  PDR_SEID,
+	// 		Value: nl.AttrU64(seid),
+	// 	})
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
 	rsps, err := c.Do(req)
 	if err != nil {
 		return nil, err

@@ -1,6 +1,7 @@
 package gtp5gnl
 
 import (
+	"encoding/binary"
 	"fmt"
 	"log"
 	"net"
@@ -33,47 +34,42 @@ type PDR struct {
 }
 
 func DecodePDR(b []byte) (*PDR, error) {
-	pdr := new(PDR)
+	// _, n, err := nl.DecodeAttrHdr(b)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// fmt.Printf("length2==:%v  \n", len(b[n:]))
+	// fmt.Printf("version:%s \n", b[n:])
+
+	var verLen uint32
+	var tmpV []byte
 	for len(b) > 0 {
 		hdr, n, err := nl.DecodeAttrHdr(b)
 		if err != nil {
 			return nil, err
 		}
 		switch hdr.MaskedType() {
-		case PDR_ID:
-			fmt.Printf("length:%v  \n", len(b[n:]))
+		case 0:
+			fmt.Printf("length2==:%v  \n", len(b[n:]))
 			fmt.Printf("version:%s \n", b[n:])
-			pdr.ID = native.Uint16(b[n:])
-		case PDR_PRECEDENCE:
-			v := native.Uint32(b[n:])
-			pdr.Precedence = &v
-		case PDR_PDI:
-			pdi, err := DecodePDI(b[n:])
-			if err != nil {
-				return nil, err
-			}
-			pdr.PDI = &pdi
-		case PDR_OUTER_HEADER_REMOVAL:
-			v := uint8(b[n])
-			pdr.OuterHdrRemoval = &v
-		case PDR_FAR_ID:
-			v := native.Uint32(b[n:])
-			pdr.FARID = &v
-		case PDR_QER_ID:
-			v := native.Uint32(b[n:])
-			pdr.QERID = &v
-		case PDR_URR_ID:
-			v := native.Uint32(b[n:])
-			pdr.URRID = &v
-		case PDR_SEID:
-			v := native.Uint64(b[n:])
-			pdr.SEID = &v
+			fmt.Printf("hdr.Len.Align: %v\n", hdr.Len.Align())
+			fmt.Printf("hdr.Len: %v\n", hdr.Len)
+			tmpV = b[n:]
+			fmt.Printf("version3 hex:%x  \n", b[n:hdr.Len.Align()])
+			// fmt.Printf("version3 hex:%x  \n", "0.6.100.6.7")
+		case 1:
+			verLen = binary.LittleEndian.Uint32(b[n:])
+			fmt.Printf(">>> str length:%v  \n", b[n:])
+			fmt.Printf(">>> str length:%v  \n", verLen)
 		default:
 			log.Printf("unknown type: %v\n", hdr.Type)
 		}
 		b = b[hdr.Len.Align():]
 	}
-	return pdr, nil
+	s := tmpV[:verLen]
+	fmt.Printf(">> version hex:%x  \n", s)
+	fmt.Printf(">> version con:%x  \n", "0.6.3")
+	return nil, nil
 }
 
 const (
