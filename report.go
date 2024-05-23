@@ -4,12 +4,51 @@ import (
 	"fmt"
 	"syscall"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/khirono/go-genl"
 	"github.com/khirono/go-nl"
+	"github.com/sirupsen/logrus"
 )
 
 func GetReport(c *Client, link *Link, urrid uint64, seid uint64) ([]USAReport, error) {
 	return GetReportOID(c, link, OID{uint64(urrid), seid})
+}
+
+func GetULDLReport(c *Client, link *Link) (*ULDLReport, error) {
+	flags := syscall.NLM_F_ACK
+	req := nl.NewRequest(c.ID, flags)
+
+	logrus.Warnf(">>> GetULDLReport")
+	err := req.Append(genl.Header{Cmd: CMD_GET_ULDL_REPORT})
+	if err != nil {
+		return nil, err
+	}
+
+	err = req.Append(nl.AttrList{
+		{
+			Type:  LINK,
+			Value: nl.AttrU32(link.Index),
+		},
+	})
+	if err != nil {
+		logrus.Warnf(">>>> Append")
+		return nil, err
+	}
+
+	rsps, err := c.Do(req)
+	if err != nil {
+		logrus.Warnf(">>>> Do")
+		return nil, err
+	}
+	if len(rsps) < 1 {
+		return nil, fmt.Errorf("nil ULDL Report")
+	}
+	logrus.Warnf(">>>> rsp[+v]", spew.Sdump(rsps))
+	reports, err := DecodeULDLReport(rsps[0].Body[genl.SizeofHeader:])
+	if err != nil {
+		return nil, err
+	}
+	return reports, err
 }
 
 func GetReportOID(c *Client, link *Link, oid OID) ([]USAReport, error) {

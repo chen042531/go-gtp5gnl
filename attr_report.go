@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/khirono/go-nl"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -42,6 +43,17 @@ const (
 	ULNOP
 	DLNOP
 )
+
+/* for UPF UL/DL Report*/
+const (
+	UL = iota + 1
+	DL
+)
+
+type ULDLReport struct {
+	UL uint64
+	DL uint64
+}
 
 type USAReport struct {
 	URRID          uint32
@@ -149,6 +161,31 @@ func decodeVolumeMeasurement(b []byte) (VolumeMeasurement, error) {
 		b = b[hdr.Len.Align():]
 	}
 	return VolMeasurement, nil
+}
+
+func DecodeULDLReport(b []byte) (*ULDLReport, error) {
+	uldlReport := new(ULDLReport)
+
+	logrus.Warnf(">>>>> DecodeULDLReport")
+	for len(b) > 0 {
+		hdr, n, err := nl.DecodeAttrHdr(b)
+		if err != nil {
+			return nil, err
+		}
+		logrus.Warnf(">>>>> hdr[%+v]", hdr)
+		logrus.Warnf(">>>>> n[%+v]", n)
+		switch hdr.MaskedType() {
+		case UL:
+			logrus.Warnf(">>>>> b[n:](%+v)", b[n:])
+			logrus.Warnf(">>>>> native.Uint64(b[n:])(%+v)", native.Uint64(b[n:]))
+			uldlReport.UL = native.Uint64(b[n:])
+		case DL:
+			uldlReport.DL = native.Uint64(b[n:])
+		}
+
+		b = b[hdr.Len.Align():]
+	}
+	return uldlReport, nil
 }
 
 func DecodeAllUSAReports(b []byte) ([]USAReport, error) {
