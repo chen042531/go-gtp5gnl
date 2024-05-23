@@ -48,6 +48,8 @@ func GetULDLReport(c *Client, link *Link) (*ULDLReport, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	logrus.Warnf(">>>> reports[+v]", reports)
 	return reports, err
 }
 

@@ -183,6 +183,7 @@ func DecodeULDLReport(b []byte) (*ULDLReport, error) {
 			uldlReport.DL = native.Uint64(b[n:])
 		}
 
+		logrus.Warnf(">>>>> UL_CNT(%+v), DL_CNT(%v)", uldlReport.UL, uldlReport.DL)
 		b = b[hdr.Len.Align():]
 	}
 	return uldlReport, nil
