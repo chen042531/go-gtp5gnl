@@ -8,6 +8,34 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+/* for UPF UL/DL Report*/
+const (
+	UPLINK_VOL_RX = iota + 1
+	UPLINK_VOL_TX
+	DOWNLINK_VOL_RX
+	DOWNLINK_VOL_TX
+
+	UPLINK_PKT_RX
+	UPLINK_PKT_TX
+	DOWNLINK_PKT_RX
+	DOWNLINK_PKT_TX
+)
+
+type ULDLReport struct {
+	TotalVolRx    uint64
+	TotalVolTx    uint64
+	UpLinkVolRx   uint64
+	UpLinkVolTx   uint64
+	DownLinkVolRx uint64
+	DownLinkVolTx uint64
+	TotalPktRx    uint64
+	TotalPktTx    uint64
+	UpLinkPktRx   uint64
+	UpLinkPktTx   uint64
+	DownLinkPktRx uint64
+	DownLinkPktTx uint64
+}
+
 const (
 	UR = iota + 5
 )
@@ -43,17 +71,6 @@ const (
 	ULNOP
 	DLNOP
 )
-
-/* for UPF UL/DL Report*/
-const (
-	UL = iota + 1
-	DL
-)
-
-type ULDLReport struct {
-	UL uint64
-	DL uint64
-}
 
 type USAReport struct {
 	URRID          uint32
@@ -172,20 +189,39 @@ func DecodeULDLReport(b []byte) (*ULDLReport, error) {
 		if err != nil {
 			return nil, err
 		}
-		logrus.Warnf(">>>>> hdr[%+v]", hdr)
-		logrus.Warnf(">>>>> n[%+v]", n)
+		// logrus.Warnf(">>>>> hdr[%+v]", hdr)
+		// logrus.Warnf(">>>>> n[%+v]", n)
 		switch hdr.MaskedType() {
-		case UL:
-			logrus.Warnf(">>>>> b[n:](%+v)", b[n:])
-			logrus.Warnf(">>>>> native.Uint64(b[n:])(%+v)", native.Uint64(b[n:]))
-			uldlReport.UL = native.Uint64(b[n:])
-		case DL:
-			uldlReport.DL = native.Uint64(b[n:])
+		case UPLINK_VOL_RX:
+			// logrus.Warnf(">>>>> b[n:](%+v)", b[n:])
+			// logrus.Warnf(">>>>> native.Uint64(b[n:])(%+v)", native.Uint64(b[n:]))
+			uldlReport.UpLinkVolRx = native.Uint64(b[n:])
+		case UPLINK_VOL_TX:
+			uldlReport.UpLinkVolTx = native.Uint64(b[n:])
+		case DOWNLINK_VOL_RX:
+			uldlReport.DownLinkVolRx = native.Uint64(b[n:])
+		case DOWNLINK_VOL_TX:
+			uldlReport.DownLinkVolTx = native.Uint64(b[n:])
+		case UPLINK_PKT_RX:
+			uldlReport.UpLinkPktRx = native.Uint64(b[n:])
+		case UPLINK_PKT_TX:
+			uldlReport.UpLinkPktTx = native.Uint64(b[n:])
+		case DOWNLINK_PKT_RX:
+			uldlReport.DownLinkPktRx = native.Uint64(b[n:])
+		case DOWNLINK_PKT_TX:
+			uldlReport.DownLinkPktTx = native.Uint64(b[n:])
 		}
 
-		logrus.Warnf(">>>>> UL_CNT(%+v), DL_CNT(%v)", uldlReport.UL, uldlReport.DL)
+		// logrus.Warnf(">>>>> UL_CNT(%+v), DL_CNT(%v)", uldlReport.UL, uldlReport.DL)
 		b = b[hdr.Len.Align():]
 	}
+
+	uldlReport.TotalVolRx = uldlReport.UpLinkVolRx + uldlReport.DownLinkVolRx
+	uldlReport.TotalVolTx = uldlReport.UpLinkVolTx + uldlReport.DownLinkVolTx
+
+	uldlReport.TotalPktRx = uldlReport.UpLinkPktRx + uldlReport.DownLinkPktRx
+	uldlReport.TotalPktTx = uldlReport.UpLinkPktTx + uldlReport.DownLinkPktTx
+
 	return uldlReport, nil
 }
 
