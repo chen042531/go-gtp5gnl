@@ -9,7 +9,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/free5gc/go-gtp5gnl"
+	"github.com/chen042531/go-gtp5gnl"
 	"github.com/khirono/go-nl"
 )
 
