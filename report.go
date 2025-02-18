@@ -6,6 +6,8 @@ import (
 
 	"github.com/khirono/go-genl"
 	"github.com/khirono/go-nl"
+	newnl "github.com/vishvananda/netlink/nl"
+	"golang.org/x/sys/unix"
 )
 
 func GetReport(c *Client, link *Link, urrid uint64, seid uint64) ([]USAReport, error) {
@@ -167,5 +169,47 @@ func GetMultiReportsOID(c *Client, link *Link, oids []OID) ([]USAReport, error) 
 	if err != nil {
 		return nil, err
 	}
+	// fmt.Printf(">>> reports: %+v\n", spew.Sdump(reports))
+	return reports, err
+}
+
+func GetMultiReportsOIDv2(c *Client, link *Link, oids []OID) ([]USAReport, error) {
+	msg := &newnl.Genlmsg{
+		Command: CMD_GET_MULTI_REPORTS,
+	}
+
+	flags := syscall.NLM_F_ACK
+	req := newnl.NewNetlinkRequest(c.ID, flags)
+	req.AddData(msg)
+
+	req.AddData(newnl.NewRtAttr(LINK, newnl.Uint32Attr(uint32(link.Index))))
+	req.AddData(newnl.NewRtAttr(URR_NUM, newnl.Uint32Attr(uint32(len(oids)))))
+
+	for _, oid := range oids {
+		urrid, ok := oid.ID()
+		if !ok {
+			return nil, fmt.Errorf("invalid oid: %v", oid)
+		}
+		seid, ok := oid.SEID()
+		if ok {
+			urrsData := newnl.NewRtAttr(URR_MULTI_SEID_URRID|int(newnl.NLA_F_NESTED), nil)
+			urrsData.AddChild(newnl.NewRtAttr(URR_ID, newnl.Uint32Attr(uint32(urrid))))
+			urrsData.AddChild(newnl.NewRtAttr(URR_SEID, newnl.Uint64Attr(seid)))
+			req.AddData(urrsData)
+		}
+	}
+
+	// fmt.Printf("###>>> req: %+v\n", req)
+	msgs, err := req.Execute(unix.NETLINK_GENERIC, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// fmt.Printf("##>>> msgs: %+v\n", spew.Sdump(msgs))
+	reports, err := DecodeAllUSAReports(msgs[0][genl.SizeofHeader:])
+	if err != nil {
+		return nil, err
+	}
+	// fmt.Printf("###>>> reports: %+v\n", spew.Sdump(reports))
 	return reports, err
 }
